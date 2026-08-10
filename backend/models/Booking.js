@@ -13,9 +13,13 @@ const Booking = sequelize.define('Booking', {
     type: DataTypes.ENUM('pending', 'confirmed', 'cancelled'),
     defaultValue: 'pending',
   },
+  serviceId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
 });
 
 Service.hasMany(Booking, { foreignKey: 'serviceId', onDelete: 'CASCADE' });
-Booking.belongsTo(Service, { foreignKey: 'serviceId' });
+Booking.belongsTo(Service, { foreignKey: 'serviceId', allowNull: false });
 
 module.exports = Booking;

@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import bridal from "@/assets/bridal.jpg";
 import hair from "@/assets/hair.jpg";
 import skin from "@/assets/skin.jpg";
@@ -6,6 +7,7 @@ import nails from "@/assets/nails.jpg";
 import g1 from "@/assets/gallery-1.jpg";
 import g2 from "@/assets/gallery-2.jpg";
 import { PageHeader } from "@/components/page-header";
+import { fetchServices } from "@/lib/api";
 
 export const Route = createFileRoute("/services")({
   head: () => ({
@@ -20,63 +22,38 @@ export const Route = createFileRoute("/services")({
   component: Services,
 });
 
-type Cat = {
+type CatMeta = {
   key: string;
   title: string;
   tagline: string;
   img: string;
-  items: { name: string; price: string; note?: string }[];
 };
 
-const cats: Cat[] = [
-  {
-    key: "makeup", title: "Makeup", tagline: "Skin-first, editorial, considered.", img: g1,
-    items: [
-      { name: "Bridal Makeup", price: "on request", note: "Includes trial" },
-      { name: "Party Makeup", price: "PKR 18,000" },
-      { name: "Editorial / Shoot", price: "on request" },
-      { name: "Casual / Soft Glam", price: "PKR 12,000" },
-    ],
-  },
-  {
-    key: "hair", title: "Hair", tagline: "Cut, colour, styled with intent.", img: hair,
-    items: [
-      { name: "Signature Cut", price: "PKR 5,500" },
-      { name: "Colour · Balayage", price: "from PKR 22,000" },
-      { name: "Keratin · Botox", price: "from PKR 18,000" },
-      { name: "Bridal Hair Styling", price: "PKR 15,000" },
-    ],
-  },
-  {
-    key: "skin", title: "Skin", tagline: "Rituals for calmer, brighter skin.", img: skin,
-    items: [
-      { name: "Hydrafacial", price: "PKR 14,000" },
-      { name: "Signature Facial", price: "PKR 9,500" },
-      { name: "Bridal Radiance Course", price: "from PKR 45,000" },
-      { name: "Chemical Peel", price: "PKR 11,000" },
-    ],
-  },
-  {
-    key: "nails", title: "Nails", tagline: "Quiet, precise, gently glossy.", img: nails,
-    items: [
-      { name: "Manicure", price: "PKR 3,500" },
-      { name: "Pedicure", price: "PKR 4,500" },
-      { name: "Gel Overlay", price: "PKR 5,500" },
-      { name: "Minimal Nail Art", price: "PKR 6,500" },
-    ],
-  },
-  {
-    key: "mehndi", title: "Mehndi & Ritual", tagline: "Craft passed hand to hand.", img: g2,
-    items: [
-      { name: "Bridal Mehndi", price: "on request" },
-      { name: "Party Mehndi", price: "PKR 4,500" },
-      { name: "Threading & Waxing", price: "from PKR 800" },
-      { name: "Bridal Waxing Ritual", price: "PKR 8,500" },
-    ],
-  },
+const categoryMeta: CatMeta[] = [
+  { key: "makeup", title: "Makeup", tagline: "Skin-first, editorial, considered.", img: g1 },
+  { key: "hair", title: "Hair", tagline: "Cut, colour, styled with intent.", img: hair },
+  { key: "skin", title: "Skin", tagline: "Rituals for calmer, brighter skin.", img: skin },
+  { key: "nails", title: "Nails", tagline: "Quiet, precise, gently glossy.", img: nails },
+  { key: "mehndi", title: "Mehndi & Ritual", tagline: "Craft passed hand to hand.", img: g2 },
 ];
 
 function Services() {
+  const { data: services, isLoading, isError } = useQuery({
+    queryKey: ["services"],
+    queryFn: fetchServices,
+  });
+
+  const cats = categoryMeta.map((meta) => ({
+    ...meta,
+    items: (services ?? [])
+      .filter((s) => s.category === meta.key)
+      .map((s) => ({
+        name: s.name,
+        price: s.price ?? "",
+        note: s.note,
+      })),
+  }));
+
   return (
     <div>
       <PageHeader eyebrow="The Menu" title={<>A quiet <em className="italic text-clay">menu</em> of services.</>}>
@@ -84,7 +61,17 @@ function Services() {
       </PageHeader>
 
       <div className="mx-auto max-w-[1440px] px-6 py-24 lg:px-12">
-        {cats.map((c, i) => (
+        {isLoading && (
+          <div className="py-20 text-center text-muted-foreground">Loading services...</div>
+        )}
+
+        {isError && (
+          <div className="py-20 text-center text-muted-foreground">
+            Unable to load services right now.
+          </div>
+        )}
+
+        {!isLoading && !isError && cats.map((c, i) => (
           <section id={c.key} key={c.key} className={`grid gap-12 border-b border-border py-20 lg:grid-cols-12 ${i % 2 ? "lg:[direction:rtl]" : ""}`}>
             <div className={`lg:col-span-5 ${i % 2 ? "lg:[direction:ltr]" : ""}`}>
               <img src={c.img} alt={c.title} className="aspect-[4/5] w-full object-cover" loading="lazy" />

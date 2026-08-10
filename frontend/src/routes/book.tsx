@@ -43,7 +43,7 @@ function Book() {
     notes: "",
   });
 
-  const { data: services, isLoading: loadingServices } = useQuery({
+  const { data: services, isLoading: loadingServices, isError: servicesError } = useQuery({
     queryKey: ["services"],
     queryFn: fetchServices,
   });
@@ -134,7 +134,7 @@ function Book() {
                 <select
                   value={form.serviceId}
                   onChange={(e) => set("serviceId", e.target.value)}
-                  disabled={!form.category || loadingServices}
+                  disabled={!form.category || loadingServices || servicesError}
                   className="mt-3 w-full border-0 border-b border-border bg-transparent py-3 font-display text-xl italic text-espresso focus:border-espresso focus:outline-none disabled:opacity-40"
                 >
                   <option value="">{!form.category ? "Select a category first" : "— Select —"}</option>
@@ -142,6 +142,11 @@ function Book() {
                     <option key={s.id} value={s.id}>{s.name}</option>
                   ))}
                 </select>
+                {servicesError && (
+                  <span className="mt-2 block text-xs text-red-600">
+                    Unable to load services. Please try again later.
+                  </span>
+                )}
               </label>
 
               <label className="mt-8 block">

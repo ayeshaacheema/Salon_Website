@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/page-header";
 import { Star } from "lucide-react";
 import hero from "@/assets/hero.jpg";
+import { fetchReviews, type Review } from "@/lib/api";
 
 export const Route = createFileRoute("/testimonials")({
   head: () => ({
@@ -17,42 +18,30 @@ export const Route = createFileRoute("/testimonials")({
   component: T,
 });
 
-type Review = {
-  id: number;
-  name: string;
-  role: string;
-  comment: string;
-  rating: number;
-};
-
 function T() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const fetchReviews = async () => {
+    let cancelled = false;
+
+    const load = async () => {
       try {
-        const response = await fetch(
-          `${import.meta.env.VITE_API_URL}/reviews`
-        );
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch reviews");
-        }
-
-        const result = await response.json();
-
-        setReviews(result.data);
+        const data = await fetchReviews();
+        if (!cancelled) setReviews(data);
       } catch (err) {
         console.error("Error fetching reviews:", err);
-        setError("Unable to load testimonials right now.");
+        if (!cancelled) setError("Unable to load testimonials right now.");
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
-    fetchReviews();
+    load();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return (

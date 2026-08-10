@@ -2,18 +2,9 @@ const express = require('express');
 const router = express.Router();
 const validate = require('../middleware/validate');
 const { createBookingSchema } = require('../validators/bookingValidator');
-const {
-  createBooking,
-  getAllBookings,
-  getBookingById,
-  updateBooking,
-  deleteBooking,
-} = require('../controllers/bookingController');
+const { createBooking } = require('../controllers/bookingController');
 
+// Public: customers create bookings. List/update/delete are disabled until an admin dashboard exists.
 router.post('/', validate(createBookingSchema), createBooking);
-router.get('/', getAllBookings);
-router.get('/:id', getBookingById);
-router.put('/:id', updateBooking);
-router.delete('/:id', deleteBooking);
 
 module.exports = router;
